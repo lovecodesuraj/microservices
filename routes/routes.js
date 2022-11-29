@@ -1,13 +1,16 @@
 import dotenv from "dotenv"
 dotenv.config();
-import express, { Router } from "express";
+import express from "express";
 import authenticate from "../auth/auth.js";
 import JsonPatchUser from "../db/model.js"
 const router = express.Router();
 import jwt from "jsonwebtoken";
 import jsonpatch from "jsonpatch";
-import axios from "axios";
+import path from "path"
+import jimp from "jimp";
 
+
+const __dirname = path.resolve(path.dirname(''));
 
 router.post("/register", (req, res) => {
   //authenticate user
@@ -43,11 +46,27 @@ router.post("/jsonpatch", authenticate, (req, res) => {
 })
 
 router.post("/thumbnail", authenticate, (req, res) => {
-   const imageUri=req.body.imageUri;
-  axios(`https://api.imageresizer.io/v1/images?key=${process.env.IMAGE_API_KEY}&url=${imageUri}`,
-    {
-      method: 'GET'
-    }).then(response=> res.send(response)).catch(err=>res.json({"error" :err.message}));
+  const imageUri = req.body.imageUri;
+   
+const resize = async ()=>{
+ await jimp.read(imageUri)
+  .then(lenna => {
+    return lenna
+      .resize(50, 50) 
+      .write('resized.jpg'); // save
+  })
+  .catch(err => {
+    console.error(err);
+    res.send("fail")
+  });
+   
+  res.sendFile(__dirname + "/resized.jpg")
+}
+
+resize();
+
+ 
+
 })
 
 export default router;
