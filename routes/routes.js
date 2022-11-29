@@ -16,13 +16,18 @@ router.post("/register", (req, res) => {
   //authenticate user
   const userName = req.body.userName;
   const password = req.body.password;
-  JsonPatchUser.findOne({ userName }, (err, user) => {
+  JsonPatchUser.findOne({ userName:userName }, (err, user) => {
     if (err) {
       console.log(err);
     } else {
-      if (user === null) {
-        const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET)
-        const user = new JsonPatchUser({
+      if (!user) {
+         console.log(user)
+        const accessToken = jwt.sign({
+          userName: userName,
+          password: password
+        }, process.env.ACCESS_TOKEN_SECRET)
+
+          user = new JsonPatchUser({
           UserName: userName,
           password: password,
           accessToken: accessToken,
@@ -47,25 +52,25 @@ router.post("/jsonpatch", authenticate, (req, res) => {
 
 router.post("/thumbnail", authenticate, (req, res) => {
   const imageUri = req.body.imageUri;
-   
-const resize = async ()=>{
- await jimp.read(imageUri)
-  .then(lenna => {
-    return lenna
-      .resize(50, 50) 
-      .write('resized.jpg'); // save
-  })
-  .catch(err => {
-    console.error(err);
-    res.send("fail")
-  });
-   
-  res.sendFile(__dirname + "/resized.jpg")
-}
 
-resize();
+  const resize = async () => {
+    await jimp.read(imageUri)
+      .then(lenna => {
+        return lenna
+          .resize(50, 50)
+          .write('resized.jpg'); // save
+      })
+      .catch(err => {
+        console.error(err);
+        res.send("fail")
+      });
 
- 
+    res.sendFile(__dirname + "/resized.jpg")
+  }
+
+  resize();
+
+
 
 })
 
